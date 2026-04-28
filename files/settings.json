@@ -1,0 +1,80 @@
+{
+  "_comment": "User-global Claude Code hooks. Goes at ~/.claude/settings.json. Project-specific overrides go in <project>/.claude/settings.json.",
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f \"$CLAUDE_FILE_PATH\" ] && command -v prettier >/dev/null 2>&1; then case \"$CLAUDE_FILE_PATH\" in *.ts|*.tsx|*.js|*.jsx|*.json|*.md|*.css|*.html) prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null || true ;; esac; fi; if [ -f \"$CLAUDE_FILE_PATH\" ] && command -v black >/dev/null 2>&1; then case \"$CLAUDE_FILE_PATH\" in *.py) black -q \"$CLAUDE_FILE_PATH\" 2>/dev/null || true ;; esac; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "case \"$CLAUDE_FILE_PATH\" in *.ts|*.tsx) if [ -f tsconfig.json ] && command -v npx >/dev/null 2>&1; then ERR=$(npx -y tsc --noEmit --pretty false 2>&1 | grep \"$CLAUDE_FILE_PATH\" | head -5); [ -n \"$ERR\" ] && echo \"TypeScript errors in $CLAUDE_FILE_PATH:\" && echo \"$ERR\"; fi ;; esac"
+          }
+        ]
+      }
+    ],
+
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=\"$CLAUDE_TOOL_INPUT\"; if echo \"$CMD\" | grep -qE 'rm -rf (/|~|\\$HOME)' || echo \"$CMD\" | grep -qE 'git push.*--force.*(main|master)' || echo \"$CMD\" | grep -qE 'DROP DATABASE|TRUNCATE TABLE' || echo \"$CMD\" | grep -q 'supabase.*--db-url.*prod'; then echo 'BLOCKED: dangerous command. Ask Roman first.' >&2; exit 2; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "case \"$CLAUDE_FILE_PATH\" in *.env.production|*.env.prod|*/secrets/*) echo 'BLOCKED: do not edit production secrets without explicit Roman approval.' >&2; exit 2 ;; esac"
+          }
+        ]
+      }
+    ],
+
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -d .claude/plans ]; then LATEST=$(ls -t .claude/plans/*.md 2>/dev/null | head -1); [ -n \"$LATEST\" ] && echo \"Active plan: $LATEST\"; fi; if [ -d .git ]; then echo 'Git status:'; git status --short 2>/dev/null | head -20; fi"
+          }
+        ]
+      }
+    ],
+
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Claude finished\" with title \"Claude Code\" sound name \"Glass\"' 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p ~/.claude/logs && echo \"[$(date -Iseconds)] [$PWD] $CLAUDE_USER_PROMPT\" >> ~/.claude/logs/prompts.log"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# new-project — scaffold a new project with Claude config baked in.
+#
+# Usage:
+#   new-project <name>                    # blank project, just .claude/ scaffolding
+#   new-project <name> --next             # also scaffolds a Next.js app
+#   new-project <name> --next --supabase  # Next.js + Supabase init
+#
+# After it finishes:
+#   cd ~/projects/<name> && claude
+
+set -uo pipefail
+
+NAME="${1:-}"
+shift || true
+
+if [[ -z "$NAME" ]]; then
+  echo "usage: new-project <name> [--next] [--supabase]"
+  exit 1
+fi
+
+WANT_NEXT=false
+WANT_SUPABASE=false
+for arg in "$@"; do
+  case "$arg" in
+    --next) WANT_NEXT=true ;;
+    --supabase) WANT_SUPABASE=true ;;
+  esac
+done
+
+ROOT="$HOME/projects/$NAME"
+TEMPLATE_SRC="$HOME/.claude/project-template/CLAUDE.md"
+
+# Where to copy the project template from. Prefer ~/.claude/project-template/,
+# fall back to the bundle folder if user didn't copy it during install.
+if [[ ! -f "$TEMPLATE_SRC" ]]; then
+  echo "note: ~/.claude/project-template/CLAUDE.md not found."
+  echo "      Run this once to install it:"
+  echo "        mkdir -p ~/.claude/project-template"
+  echo "        cp /path/to/bundle/project-template/CLAUDE.md ~/.claude/project-template/"
+  exit 1
+fi
+
+if [[ -d "$ROOT" ]]; then
+  echo "error: $ROOT already exists. Pick a different name or rm it first."
+  exit 1
+fi
+
+echo "==> Creating $ROOT"
+mkdir -p "$ROOT"
+cd "$ROOT"
+
+if $WANT_NEXT; then
+  echo "==> Scaffolding Next.js app"
+  npx -y create-next-app@latest . \
+    --typescript --tailwind --app --src-dir --import-alias "@/*" \
+    --use-pnpm --no-eslint --yes
+fi
+
+# git init if not already (create-next-app does it)
+[[ -d .git ]] || git init -q
+
+# .claude/ scaffolding
+mkdir -p .claude/plans
+cp "$TEMPLATE_SRC" .claude/CLAUDE.md
+sed -i '' "s/<PROJECT NAME>/$NAME/" .claude/CLAUDE.md 2>/dev/null || \
+  sed -i "s/<PROJECT NAME>/$NAME/" .claude/CLAUDE.md
+
+# .env.example seed
+if [[ ! -f .env.example ]]; then
+  cat > .env.example <<'EOF'
+# Copy to .env.local and fill in. Never commit .env.local.
+
+# Supabase (per-project)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Add other project-specific keys below
+EOF
+fi
+
+# .gitignore safety
+if ! grep -q '^\.env\.local$' .gitignore 2>/dev/null; then
+  cat >> .gitignore <<'EOF'
+
+# Never commit local secrets
+.env.local
+.env*.local
+EOF
+fi
+
+if $WANT_SUPABASE; then
+  echo "==> Initializing Supabase"
+  if command -v supabase >/dev/null 2>&1; then
+    supabase init >/dev/null 2>&1 || echo "    supabase init had issues, continuing"
+  else
+    echo "    supabase CLI not installed; skipping. brew install supabase/tap/supabase"
+  fi
+fi
+
+# Initial commit
+git add -A
+git commit -q -m "initial: scaffolded by new-project" 2>/dev/null || true
+
+cat <<EOF
+
+==> Done. Project at: $ROOT
+
+Next steps:
+  cd $ROOT
+  claude --dangerously-skip-permissions    # code work
+  # or:
+  claude                                   # design/plan work (asks permission)
+
+First prompt suggestion:
+  "Use the brainstorming skill, then Opus planner mode to write a plan
+   for <what you want to build>."
+EOF

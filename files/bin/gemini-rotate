@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# gemini-rotate — call Gemini CLI, rotating across multiple AI Studio API keys
+# when one hits its quota.
+#
+# Setup: export GEMINI_KEY_1, GEMINI_KEY_2, GEMINI_KEY_3 in ~/.zshrc
+# Get free keys: https://aistudio.google.com/apikey (use a different Google
+# account for each key to multiply the free-tier quota).
+#
+# Usage: gemini-rotate -p "your prompt" [other gemini args]
+
+set -euo pipefail
+
+KEYS=()
+[[ -n "${GEMINI_KEY_1:-}" ]] && KEYS+=("$GEMINI_KEY_1")
+[[ -n "${GEMINI_KEY_2:-}" ]] && KEYS+=("$GEMINI_KEY_2")
+[[ -n "${GEMINI_KEY_3:-}" ]] && KEYS+=("$GEMINI_KEY_3")
+
+if [[ ${#KEYS[@]} -eq 0 ]]; then
+  echo "gemini-rotate: no GEMINI_KEY_N env vars set" >&2
+  exit 2
+fi
+
+ERRFILE=$(mktemp)
+trap 'rm -f "$ERRFILE"' EXIT
+
+for i in "${!KEYS[@]}"; do
+  KEY="${KEYS[$i]}"
+  if GEMINI_API_KEY="$KEY" gemini "$@" 2> "$ERRFILE"; then
+    exit 0
+  fi
+  # Only rotate on quota / rate / auth-style errors. Other failures should
+  # propagate immediately so we don't mask real bugs.
+  if grep -qiE "quota|rate.?limit|exhaust|429|resource_exhausted|permission_denied" "$ERRFILE"; then
+    echo "gemini-rotate: key $((i+1)) hit quota, trying next" >&2
+    continue
+  else
+    cat "$ERRFILE" >&2
+    exit 1
+  fi
+done
+
+echo "gemini-rotate: all ${#KEYS[@]} keys exhausted" >&2
+cat "$ERRFILE" >&2
+exit 1
