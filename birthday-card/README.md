@@ -80,4 +80,4 @@ Any modern browser from 2020 onward. Requires support for:
 - Photo filenames and captions are fully configurable in `config.js` — the `src` path is relative to `index.html`.
 - All colours are defined as CSS custom properties in `:root` in `style.css`.
 
-<!-- Deployed via GitHub Pages: see .github/workflows/deploy-pages.yml -->
+<!-- Live site: deployed from the gh-pages branch via GitHub Pages -->
