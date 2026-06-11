@@ -1,0 +1,599 @@
+/* ============================================================
+   style.css — Birthday Card Visual Style
+   "Crayola crayon" aesthetic: wobbly borders, stop-motion feel
+   ============================================================ */
+
+/* ---------- Google Fonts ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Patrick+Hand&display=swap');
+
+/* ---------- CSS Custom Properties ---------- */
+:root {
+  --crayon-red:    #EE204D;
+  --crayon-orange: #FF7538;
+  --crayon-yellow: #FCE883;
+  --crayon-green:  #1CAC78;
+  --crayon-blue:   #1F75FE;
+  --crayon-violet: #926EAE;
+  --crayon-pink:   #FFAACC;
+  --crayon-brown:  #B4674D;
+  --paper:         #FBF7EE;
+  --ink:           #2C1A0E;
+
+  --font-hand:  'Gochi Hand', cursive;
+  --font-body:  'Patrick Hand', cursive;
+
+  /* chunky shadow offsets */
+  --shadow-sm:  3px 3px 0 rgba(44,26,14,.25);
+  --shadow-md:  5px 5px 0 rgba(44,26,14,.3);
+  --shadow-lg:  8px 8px 0 rgba(44,26,14,.35);
+}
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  overscroll-behavior: none;           /* stop pull-to-refresh */
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+}
+
+/* Grain overlay — SVG feTurbulence as data-URI */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 300px 300px;
+}
+
+/* ---------- Stage wrapper ---------- */
+#stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100dvh;
+  padding: clamp(16px, 4vmin, 48px);
+  gap: 24px;
+}
+
+/* ---------- Background doodles ---------- */
+.bg-doodles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* ---------- SVG Filters (defined in HTML, referenced here) ---------- */
+
+/* Crayon filter applied to headings and decorative text */
+.crayon-text {
+  filter: url(#crayon-displace);
+}
+
+/* ---------- STAGE 1 — Envelope ---------- */
+#envelope-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  width: 100%;
+  position: relative;
+}
+
+/* hint text */
+.hint {
+  font-family: var(--font-hand);
+  font-size: clamp(1rem, 3vmin, 1.4rem);
+  color: var(--crayon-violet);
+  filter: url(#crayon-displace);
+  margin-bottom: 12px;
+  animation: hint-wiggle 2s steps(4) infinite;
+  user-select: none;
+}
+
+@keyframes hint-wiggle {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-2deg); }
+  50%  { transform: rotate(0deg); }
+  75%  { transform: rotate(2deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* wobbly arrow doodle under hint */
+.hint-arrow {
+  display: block;
+  margin: 0 auto 16px;
+  animation: arrow-bounce 1.5s steps(3) infinite;
+}
+
+@keyframes arrow-bounce {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+
+/* ---------- Envelope component ---------- */
+#envelope-wrap {
+  position: relative;
+  width: clamp(260px, 70vmin, 480px);
+  /* perspective for 3-D flap */
+  perspective: 800px;
+  cursor: pointer;
+  animation: env-idle 3s steps(6) infinite;
+}
+
+@keyframes env-idle {
+  0%,100% { transform: rotate(0deg) translateY(0); }
+  20%      { transform: rotate(-1deg) translateY(-3px); }
+  40%      { transform: rotate(0deg) translateY(-6px); }
+  60%      { transform: rotate(1deg) translateY(-3px); }
+  80%      { transform: rotate(0deg) translateY(0); }
+}
+
+#envelope-wrap.flap-open { animation: none; }
+
+/* Envelope body */
+.env-body {
+  position: relative;
+  width: 100%;
+  padding-bottom: 62%;             /* landscape ratio */
+  background: var(--crayon-yellow);
+  border: 3px solid rgba(44,26,14,.55);
+  border-radius: 255px 12px 230px 18px / 18px 230px 12px 255px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+/* Inner envelope shading */
+.env-body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255,255,255,.25) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* Envelope pocket — clips the peeking card and photos */
+.env-pocket {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  /* top half of envelope body = envelope opening */
+  top: 38%;
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* Wax seal */
+.wax-seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(48px, 10vmin, 72px);
+  height: clamp(48px, 10vmin, 72px);
+  z-index: 5;
+  filter: url(#crayon-displace);
+  transition: opacity .3s steps(3);
+}
+
+#envelope-wrap.flap-open .wax-seal { opacity: 0; pointer-events: none; }
+
+/* Envelope flap */
+.env-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 55%;
+  background: #F4D03F;
+  border: 3px solid rgba(44,26,14,.45);
+  border-bottom: none;
+  border-radius: 12px 6px 0 0;
+  transform-origin: top center;
+  transform-style: preserve-3d;
+  /* closed */
+  transform: rotateX(0deg);
+  transition: transform .6s steps(8);
+  z-index: 4;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: linear-gradient(170deg, #FCE883 0%, #F4D03F 100%);
+}
+
+#envelope-wrap.flap-open .env-flap {
+  transform: rotateX(-175deg);
+}
+
+/* ---------- Peeking card and photo stack ---------- */
+.peeking-card,
+.peeking-photos {
+  position: absolute;
+  bottom: 0;
+  transition: bottom .5s steps(6);
+}
+
+/* only appear after flap opens */
+.peeking-card {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 45%;
+  height: 140%;          /* taller than pocket so it peeks */
+  background: white;
+  border: 3px solid rgba(44,26,14,.4);
+  border-radius: 8px 8px 4px 4px;
+  box-shadow: var(--shadow-md);
+  cursor: grab;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 6px;
+  font-family: var(--font-hand);
+  font-size: .75rem;
+  color: var(--crayon-violet);
+  opacity: 0;
+  pointer-events: none;
+  touch-action: none;
+}
+
+.peeking-photos {
+  left: 62%;
+  width: 35%;
+  height: 100%;
+  background: white;
+  border: 3px solid rgba(44,26,14,.4);
+  border-radius: 8px 8px 4px 4px;
+  box-shadow: 3px 3px 0 rgba(44,26,14,.2);
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-10%) rotate(6deg);
+}
+
+#envelope-wrap.flap-open .peeking-card,
+#envelope-wrap.flap-open .peeking-photos {
+  opacity: 1;
+}
+
+#envelope-wrap.flap-open .peeking-card {
+  pointer-events: auto;
+  bottom: 30%;   /* peek amount */
+}
+
+#envelope-wrap.flap-open .peeking-photos {
+  bottom: 10%;
+}
+
+/* ---------- Drag hint on the card ---------- */
+#pull-hint {
+  position: absolute;
+  top: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-hand);
+  font-size: clamp(.8rem, 2.5vmin, 1rem);
+  color: var(--crayon-blue);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .4s steps(4);
+  pointer-events: none;
+  filter: url(#crayon-displace);
+}
+#envelope-wrap.flap-open #pull-hint { opacity: 1; }
+
+/* ---------- STAGE 2 — Greeting Card (free) ---------- */
+#greeting-card {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(220px, 60vmin, 360px);
+  background: white;
+  border: 4px solid rgba(44,26,14,.5);
+  border-radius: 230px 18px 210px 22px / 22px 215px 18px 230px;
+  box-shadow: var(--shadow-lg);
+  padding: clamp(24px, 5vmin, 40px) clamp(20px, 4vmin, 32px);
+  z-index: 20;
+  text-align: center;
+  filter: url(#crayon-displace);
+}
+
+#greeting-card h1 {
+  font-family: var(--font-hand);
+  font-size: clamp(1.6rem, 6vmin, 2.8rem);
+  color: var(--crayon-red);
+  line-height: 1.2;
+  margin-bottom: .75rem;
+}
+
+/* card doodles */
+.card-doodles {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---------- Confetti Canvas ---------- */
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  display: none;
+}
+
+/* ---------- STAGE 3 — Letter ---------- */
+#letter-scene {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 24px 0 80px;
+  z-index: 10;
+  position: relative;
+}
+
+/* Accordion letter wrapper */
+#letter-accordion {
+  width: clamp(260px, 85vw, 460px);
+  position: relative;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+/* Each letter panel */
+.letter-panel {
+  position: relative;
+  background: white;
+  border: 3px solid rgba(44,26,14,.4);
+  border-radius: 6px 18px 6px 18px / 18px 6px 18px 6px;
+  overflow: hidden;
+  /* lined-paper */
+  background-image:
+    repeating-linear-gradient(
+      transparent,
+      transparent 27px,
+      #BDE0FF 28px
+    );
+  background-size: 100% 28px;
+  background-position-y: 40px;
+  padding: 12px 20px 20px;
+  box-shadow: var(--shadow-sm);
+  transform-origin: top center;
+  /* start folded */
+  transition: transform .1s steps(2);
+}
+
+/* crease shadow on folded panels */
+.letter-panel + .letter-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: linear-gradient(to bottom, rgba(0,0,0,.15), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.letter-panel h2 {
+  font-family: var(--font-hand);
+  font-size: clamp(1.2rem, 4vmin, 1.7rem);
+  color: var(--crayon-blue);
+  margin-bottom: 16px;
+  margin-top: 8px;
+  filter: url(#crayon-displace);
+}
+
+.letter-panel p {
+  font-family: var(--font-body);
+  font-size: clamp(.9rem, 2.5vmin, 1.05rem);
+  line-height: 1.75;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.letter-panel .signoff {
+  font-family: var(--font-hand);
+  font-size: clamp(1rem, 3vmin, 1.25rem);
+  color: var(--crayon-violet);
+  margin-top: 16px;
+  display: block;
+}
+
+.letter-panel .ps {
+  margin-top: 20px;
+  font-family: var(--font-hand);
+  font-size: clamp(.85rem, 2.5vmin, 1rem);
+  color: var(--crayon-orange);
+}
+
+.fold-hint {
+  font-family: var(--font-hand);
+  font-size: clamp(.9rem, 2.8vmin, 1.1rem);
+  color: var(--crayon-green);
+  text-align: center;
+  margin-bottom: 4px;
+  filter: url(#crayon-displace);
+  animation: hint-wiggle 2.5s steps(4) infinite;
+}
+
+/* ---------- STAGE 4 — Polaroid Gallery ---------- */
+#gallery-scene {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 24px 0 80px;
+  z-index: 10;
+  position: relative;
+}
+
+#gallery-envelope-wrap {
+  position: relative;
+  width: clamp(240px, 65vmin, 420px);
+  perspective: 800px;
+  margin-bottom: 32px;
+}
+
+/* reuse env-body style for gallery envelope */
+#gallery-envelope-wrap .env-body {
+  cursor: default;
+}
+
+/* polaroid stack container inside gallery envelope pocket */
+#polaroid-stack {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 55%;
+  z-index: 3;
+  cursor: grab;
+  touch-action: none;
+  transition: bottom .4s steps(5);
+}
+
+#gallery-envelope-wrap.photos-visible #polaroid-stack {
+  bottom: 32%;
+}
+
+/* Individual polaroid */
+.polaroid {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: clamp(140px, 40vmin, 220px);
+  background: white;
+  border: 3px solid rgba(44,26,14,.3);
+  box-shadow: var(--shadow-md);
+  padding: clamp(8px, 2vmin, 12px);
+  padding-bottom: clamp(28px, 7vmin, 44px);
+  border-radius: 4px;
+  transform-origin: center bottom;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* tape strip on top of polaroid */
+.polaroid::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-3deg);
+  width: 40%;
+  height: 18px;
+  background: rgba(252,232,131,.7);
+  border: 1px solid rgba(44,26,14,.2);
+  border-radius: 2px;
+}
+
+.polaroid.top-card {
+  pointer-events: auto;
+}
+
+/* photo area inside polaroid */
+.polaroid-photo {
+  width: 100%;
+  /* 4:3 */
+  padding-bottom: 75%;
+  position: relative;
+  overflow: hidden;
+  background: #ddd;
+}
+
+.polaroid-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* crayon placeholder canvas */
+.polaroid-photo canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.polaroid-caption {
+  font-family: var(--font-hand);
+  font-size: clamp(.75rem, 2.2vmin, .95rem);
+  color: var(--ink);
+  text-align: center;
+  margin-top: 6px;
+  line-height: 1.3;
+}
+
+/* swipe hint */
+.swipe-hint {
+  font-family: var(--font-hand);
+  font-size: clamp(.85rem, 2.5vmin, 1rem);
+  color: var(--crayon-pink);
+  margin-top: 12px;
+  filter: url(#crayon-displace);
+  animation: hint-wiggle 2s steps(4) infinite;
+}
+
+/* ---------- Freestanding greeting-card (pulled out) ---------- */
+#greeting-card.visible {
+  display: block;
+  animation: card-pop-in .5s steps(5) forwards;
+}
+
+@keyframes card-pop-in {
+  0%   { transform: translate(-50%, -50%) scale(.4) rotate(-8deg); opacity: 0; }
+  40%  { transform: translate(-50%, -50%) scale(1.08) rotate(2deg); opacity: 1; }
+  70%  { transform: translate(-50%, -50%) scale(.97) rotate(-1deg); }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+}
+
+/* ---------- Letter reveal animation ---------- */
+@keyframes letter-drop {
+  0%   { transform: translateY(-60px); opacity: 0; }
+  40%  { transform: translateY(6px);   opacity: 1; }
+  70%  { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+
+/* ---------- Polaroid fling animation ---------- */
+@keyframes polaroid-fling-left {
+  0%   { transform: translateX(0)      rotate(0deg);    opacity: 1; }
+  50%  { transform: translateX(-180px) rotate(-30deg);  opacity: .6; }
+  100% { transform: translateX(-400px) rotate(-55deg);  opacity: 0; }
+}
+@keyframes polaroid-fling-right {
+  0%   { transform: translateX(0)     rotate(0deg);   opacity: 1; }
+  50%  { transform: translateX(180px) rotate(30deg);  opacity: .6; }
+  100% { transform: translateX(400px) rotate(55deg);  opacity: 0; }
+}
+
+/* ---------- Utility ---------- */
+.hidden { display: none !important; }
+
+/* wide screens — decorative side doodles */
+@media (min-width: 740px) {
+  .bg-doodles svg {
+    opacity: .22;
+  }
+}
