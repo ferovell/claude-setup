@@ -60,6 +60,7 @@ body::before {
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-height: 100vh;
   min-height: 100dvh;
   padding: clamp(16px, 4vmin, 48px);
   gap: 24px;
@@ -87,6 +88,7 @@ body::before {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
   position: relative;
@@ -152,7 +154,6 @@ body::before {
   border: 3px solid rgba(44,26,14,.55);
   border-radius: 255px 12px 230px 18px / 18px 230px 12px 255px;
   box-shadow: var(--shadow-lg);
-  overflow: hidden;
 }
 
 /* Inner envelope shading */
@@ -260,6 +261,7 @@ body::before {
   opacity: 0;
   pointer-events: none;
   transform: translateX(-10%) rotate(6deg);
+  touch-action: none;
 }
 
 #envelope-wrap.flap-open .peeking-card,
@@ -342,7 +344,7 @@ body::before {
   width: 100%;
   max-width: 540px;
   margin: 0 auto;
-  padding: 24px 0 80px;
+  padding: 24px 0 96px;
   z-index: 10;
   position: relative;
 }
@@ -440,7 +442,7 @@ body::before {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  padding: 24px 0 80px;
+  padding: 24px 0 96px;
   z-index: 10;
   position: relative;
 }
@@ -586,6 +588,94 @@ body::before {
   0%   { transform: translateX(0)     rotate(0deg);   opacity: 1; }
   50%  { transform: translateX(180px) rotate(30deg);  opacity: .6; }
   100% { transform: translateX(400px) rotate(55deg);  opacity: 0; }
+}
+
+/* ---------- Scene Navigation Bar (Bug 5) ---------- */
+.scene-nav {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 100;
+  background: var(--paper);
+  border: 3px solid rgba(44,26,14,.4);
+  border-radius: 255px 12px 230px 18px / 18px 230px 12px 255px;
+  padding: 8px 16px;
+  box-shadow: var(--shadow-md);
+  filter: url(#crayon-displace);
+}
+.nav-btn {
+  font-family: var(--font-hand);
+  font-size: clamp(.85rem, 2.5vmin, 1rem);
+  background: none;
+  border: 2px solid rgba(44,26,14,.3);
+  border-radius: 200px 8px 190px 12px / 8px 180px 12px 200px;
+  padding: 6px 14px;
+  cursor: pointer;
+  color: var(--ink);
+  transition: background .1s steps(2);
+}
+.nav-btn--active {
+  background: var(--crayon-yellow);
+}
+.nav-btn:active {
+  background: var(--crayon-orange);
+}
+
+/* ---------- Polaroid Modal (Bug 7) ---------- */
+.polaroid-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.polaroid-modal.hidden { display: none !important; }
+.polaroid-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(44,26,14,.55);
+}
+.polaroid-modal-inner {
+  position: relative;
+  z-index: 1;
+  width: min(90vmin, 340px);
+  background: white;
+  border: 4px solid rgba(44,26,14,.5);
+  border-radius: 6px;
+  padding: clamp(10px, 3vmin, 16px);
+  padding-bottom: clamp(36px, 8vmin, 52px);
+  box-shadow: var(--shadow-lg);
+  animation: modal-pop .3s steps(5) forwards;
+}
+@keyframes modal-pop {
+  0%   { transform: scale(.3) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(1.06) rotate(1deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.polaroid-modal-photo {
+  width: 100%;
+  padding-bottom: 75%;
+  position: relative;
+  overflow: hidden;
+  background: #ddd;
+}
+.polaroid-modal-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.polaroid-modal-caption {
+  font-family: var(--font-hand);
+  font-size: clamp(.85rem, 2.5vmin, 1.05rem);
+  text-align: center;
+  margin-top: 8px;
+  color: var(--ink);
 }
 
 /* ---------- Utility ---------- */
