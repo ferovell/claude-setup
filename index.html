@@ -118,26 +118,29 @@
           <svg class="wax-seal" viewBox="0 0 72 72" aria-hidden="true">
             <circle cx="36" cy="36" r="30" fill="#EE204D" stroke="rgba(44,26,14,.4)" stroke-width="2"/>
             <circle cx="36" cy="36" r="24" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <text x="36" y="42" text-anchor="middle" font-family="serif" font-size="22" fill="white">♥</text>
+            <text x="36" y="44" text-anchor="middle" font-family="serif" font-size="24">🤝</text>
           </svg>
 
-          <!-- Pocket: clips peeking contents -->
+          <!-- Pocket: provides the paper-in-envelope look -->
           <div class="env-pocket">
-            <!-- Peeking photo stack (shorter, behind, offset) -->
-            <div class="peeking-photos" id="peeking-photos" aria-hidden="true">
-              <!-- Visual stack lines to imply multiple photos -->
-              <div style="position:absolute;inset:4px;background:#F9F9F9;border-radius:4px;border:2px solid rgba(44,26,14,.15);transform:rotate(4deg)"></div>
-              <div style="position:absolute;inset:4px;background:white;border-radius:4px;border:2px solid rgba(44,26,14,.2)"></div>
-            </div>
-
-            <!-- Peeking card (taller, in front) -->
-            <div class="peeking-card" id="peeking-card" aria-hidden="true">
-              <!-- Pull hint floats above card -->
-              <span id="pull-hint">Pull the card out ↑</span>
-            </div>
           </div><!-- /env-pocket -->
 
         </div><!-- /env-body -->
+
+        <!-- Peeking items live OUTSIDE env-body so overflow:hidden doesn't clip them -->
+        <!-- Peeking photo stack (shorter, behind, offset) -->
+        <div class="peeking-photos" id="peeking-photos" aria-hidden="true">
+          <!-- Visual stack lines to imply multiple photos -->
+          <div style="position:absolute;inset:4px;background:#F9F9F9;border-radius:4px;border:2px solid rgba(44,26,14,.15);transform:rotate(4deg)"></div>
+          <div style="position:absolute;inset:4px;background:white;border-radius:4px;border:2px solid rgba(44,26,14,.2)"></div>
+        </div>
+
+        <!-- Peeking card (taller, in front) -->
+        <div class="peeking-card" id="peeking-card" aria-hidden="true">
+          <!-- Pull hint floats above card -->
+          <span id="pull-hint">Pull the card out ↑</span>
+        </div>
+
       </div><!-- /envelope-wrap -->
     </section>
 
@@ -190,7 +193,7 @@
          SCENE 3 — LETTER (folded accordion)
          ====================================================== -->
     <section id="letter-scene" aria-label="Birthday letter">
-      <p class="fold-hint" id="fold-hint">Pull down to unfold ✶</p>
+      <p class="fold-hint" id="fold-hint">Tap or pull down to unfold ✶</p>
 
       <div id="letter-accordion"
            role="region"
@@ -250,7 +253,25 @@
 
     </section>
 
+    <!-- ======================================================
+         NAV BAR — Letter <-> Gallery navigation (Bug 5)
+         ====================================================== -->
+    <nav id="scene-nav" class="scene-nav hidden" aria-label="Navigate scenes">
+      <button id="nav-letter-btn" class="nav-btn nav-btn--active">✉ Letter</button>
+      <button id="nav-gallery-btn" class="nav-btn">📸 Photos</button>
+    </nav>
+
   </main><!-- /stage -->
+
+  <!-- ======================================================
+       POLAROID MODAL — tap to zoom (Bug 7)
+       ====================================================== -->
+  <div id="polaroid-modal" class="polaroid-modal hidden" role="dialog" aria-modal="true" aria-label="Photo enlarged">
+    <div class="polaroid-modal-backdrop"></div>
+    <div class="polaroid-modal-inner">
+      <!-- polaroid content injected by JS -->
+    </div>
+  </div>
 
   <!-- Load config first so CONFIG is available in app.js -->
   <script src="config.js"></script>

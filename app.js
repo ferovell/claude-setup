@@ -100,6 +100,11 @@ const galleryPocket = document.getElementById('gallery-pocket');
 const polaroidFreeStack = document.getElementById('polaroid-free-stack');
 const swipeHint     = document.getElementById('swipe-hint');
 
+const sceneNav       = document.getElementById('scene-nav');
+const navLetterBtn   = document.getElementById('nav-letter-btn');
+const navGalleryBtn  = document.getElementById('nav-gallery-btn');
+const polaroidModal  = document.getElementById('polaroid-modal');
+
 /* ------------------------------------------------------------------
    4. POPULATE CONTENT FROM CONFIG
 ------------------------------------------------------------------ */
@@ -158,9 +163,9 @@ let cardCurrentOffsetY = 0;
 let cardPocketHeight = 0;
 
 function initCardDrag() {
-  // Measure the pocket so we know the clip threshold
-  const pocketRect = peekingCard.closest('.env-pocket').getBoundingClientRect();
-  cardPocketHeight = pocketRect.height;
+  // Measure the envelope wrap so we know the clip threshold
+  const wrapRect = envWrap.getBoundingClientRect();
+  cardPocketHeight = wrapRect.height;
 
   peekingCard.addEventListener('pointerdown', onCardPointerDown);
 }
@@ -331,6 +336,8 @@ let letterDragActive = false;
 let letterDragStartY = 0;
 let pendingUnfoldProgress = 0;
 let letterFullyUnfolded = false;
+let _letterPointerStartX = 0;
+let _letterPointerStartY = 0;
 
 function enterLetter() {
   // Hide confetti and greeting card
@@ -344,6 +351,12 @@ function enterLetter() {
   // Animate drop-in
   letterScene.style.animation = 'letter-drop .6s steps(6) forwards';
 
+  // Nav is available from the moment the letter exists — the user can
+  // hop between letter and photos at any time, in any fold state.
+  galleryUnlocked = true;
+  sceneNav.classList.remove('hidden');
+  updateNavButtons('LETTER');
+
   panels = PANEL_IDS.map(id => document.getElementById(id));
 
   // Apply initial folded state
@@ -351,6 +364,8 @@ function enterLetter() {
 
   // Drag on the accordion
   letterAccord.addEventListener('pointerdown', onLetterPointerDown);
+  letterAccord._touchMoveFn = (e) => { if (letterDragActive) e.preventDefault(); };
+  letterAccord.addEventListener('touchmove', letterAccord._touchMoveFn, { passive: false });
   ticker.add(tickLetter);
 }
 
@@ -360,6 +375,8 @@ function onLetterPointerDown(e) {
   letterAccord.setPointerCapture(e.pointerId);
   letterDragActive = true;
   letterDragStartY = e.clientY;
+  _letterPointerStartX = e.clientX;
+  _letterPointerStartY = e.clientY;
   pendingUnfoldProgress = unfoldProgress;
   document.body.style.overscrollBehavior = 'none';
 
@@ -379,7 +396,7 @@ function onLetterPointerMove(e) {
   pendingUnfoldProgress = Math.max(0, Math.min(3, unfoldProgress + delta));
 }
 
-function onLetterPointerUp() {
+function onLetterPointerUp(e) {
   if (!letterDragActive) return;
   letterDragActive = false;
   document.body.style.overscrollBehavior = '';
@@ -390,6 +407,19 @@ function onLetterPointerUp() {
   // Re-enable snap transition for the release snap
   panels.forEach(p => { p.style.transition = 'transform 0.2s steps(3)'; });
 
+  // Tap detection: if total pointer movement < 8px, treat as a tap → advance one panel
+  const dx = e ? Math.abs(e.clientX - _letterPointerStartX) : 99;
+  const dy = e ? Math.abs(e.clientY - _letterPointerStartY) : 99;
+  if (Math.hypot(dx, dy) < 8) {
+    unfoldProgress = Math.min(3, unfoldProgress + 1);
+    pendingUnfoldProgress = unfoldProgress;
+    applyFoldState(unfoldProgress);
+    if (unfoldProgress >= 3) {
+      onLetterFullyUnfolded();
+    }
+    return;
+  }
+
   // Snap to nearest integer panel state
   const snapped = Math.round(pendingUnfoldProgress);
   pendingUnfoldProgress = snapped;
@@ -397,11 +427,7 @@ function onLetterPointerUp() {
   applyFoldState(snapped);
 
   if (snapped >= 3) {
-    letterFullyUnfolded = true;
-    foldHint.style.opacity = '0';
-    ticker.remove(tickLetter);
-    // Transition to gallery after short pause
-    setTimeout(() => transitionTo('GALLERY'), 1200);
+    onLetterFullyUnfolded();
   }
 }
 
@@ -432,6 +458,60 @@ function applyFoldState(progress) {
   }
 }
 
+function onLetterFullyUnfolded() {
+  letterFullyUnfolded = true;
+  foldHint.style.opacity = '0';
+  ticker.remove(tickLetter);
+
+  // Remove pointerdown listener so letter can't re-fold
+  letterAccord.removeEventListener('pointerdown', onLetterPointerDown);
+
+  // Remove touchmove prevention
+  if (letterAccord._touchMoveFn) {
+    letterAccord.removeEventListener('touchmove', letterAccord._touchMoveFn);
+    letterAccord._touchMoveFn = null;
+  }
+
+  // Allow normal scrolling
+  letterAccord.style.touchAction = 'auto';
+  letterAccord.style.cursor = 'default';
+
+  // Show nav bar
+  sceneNav.classList.remove('hidden');
+  galleryUnlocked = true;
+  updateNavButtons('LETTER');
+}
+
+function updateNavButtons(state) {
+  navLetterBtn.classList.toggle('nav-btn--active', state === 'LETTER');
+  navGalleryBtn.classList.toggle('nav-btn--active', state === 'GALLERY');
+}
+
+/* Free navigation between letter and gallery, any time, both ways.
+   Scenes are display-toggled (never destroyed) so the letter keeps its
+   fold state and the gallery keeps its stack order. */
+function showScene(which) {
+  if (!galleryUnlocked) return;
+  if (which === 'GALLERY') {
+    if (!galleryEverEntered) {
+      galleryEverEntered = true;
+      transitionTo('GALLERY');           // first visit: envelope pull-out moment
+    } else {
+      letterScene.style.display = 'none';
+      galleryScene.style.display = 'flex';
+    }
+  } else {
+    galleryScene.style.display = 'none';
+    letterScene.style.display = 'flex';
+  }
+  updateNavButtons(which);
+  // Each scene fills the viewport from the top — no hunting for the envelope.
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+}
+
+navLetterBtn.addEventListener('click', () => showScene('LETTER'));
+navGalleryBtn.addEventListener('click', () => showScene('GALLERY'));
+
 /* ------------------------------------------------------------------
    10. STAGE 5 — GALLERY
    Photo pull-out from second envelope + swipeable polaroid stack
@@ -440,6 +520,8 @@ let photoElements     = [];
 let stackTopIndex     = 0;   // index of currently topmost polaroid
 let polaroidDragActive = false;
 let polaroidDragStartX = 0;
+let polaroidDragStartY = 0;
+let polaroidDragEndY   = 0;
 let polaroidCurrentX   = 0;
 let pendingPolaroidX   = 0;
 let polaroidGrabbed    = false;
@@ -448,10 +530,17 @@ let photoStackDragActive = false;
 let photoStackStartY = 0;
 let photoStackCurrentY = 0;
 let pendingStackY = 0;
+let polaroidFlingInProgress = false;
+let galleryUnlocked   = false;
+let galleryEverEntered = false;
+let _galleryBuilt     = false;
 
 function enterGallery() {
   letterScene.style.display = 'none';
   galleryScene.style.display = 'flex';
+
+  if (_galleryBuilt) return;
+  _galleryBuilt = true;
 
   // Build polaroid elements and place them in the gallery pocket
   buildPolaroids();
@@ -628,7 +717,8 @@ function renderFreeStack() {
   const count  = photos.length;
 
   photos.forEach((photo, i) => {
-    const iTop = i === stackTopIndex;
+    const relativePos = (i - stackTopIndex + count) % count; // 0=top
+    const iTop = relativePos === 0;
     const pol  = createPolaroid(photo, i);
     pol.style.position = 'absolute';
     pol.style.left     = '50%';
@@ -637,7 +727,9 @@ function renderFreeStack() {
     const rawRot = ((i * 37 + 13) % 13) - 6;  // deterministic spread
     const rot    = qRot(rawRot);
     pol.style.transform = `translateX(-50%) rotate(${rot}deg)`;
-    pol.style.zIndex    = count - i;
+    pol.style.zIndex    = count - relativePos;  // top card gets highest z-index
+    // Only the top card may receive input — fixes swipes hitting mid-stack cards
+    pol.style.pointerEvents = iTop ? 'auto' : 'none';
 
     if (iTop) {
       pol.classList.add('top-card');
@@ -740,22 +832,32 @@ let _activePolaroidCard    = null;
 let _polaroidTickFn        = null;
 let _polaroidMoveFn        = null;
 let _polaroidUpFn          = null;
+let _polaroidMaxTravel     = 0;
+let polaroidModalOpen      = false;
 
 function onPolaroidPointerDown(e) {
+  // Ignore input while a fling animation runs or the zoom modal is open,
+  // and only ever react on the current top card.
+  if (polaroidFlingInProgress || polaroidModalOpen) return;
+  if (!e.currentTarget.classList.contains('top-card')) return;
   e.preventDefault();
   const card = e.currentTarget;
   card.setPointerCapture(e.pointerId);
   _activePolaroidCard = card;
   polaroidDragActive  = true;
   polaroidDragStartX  = e.clientX;
+  polaroidDragStartY  = e.clientY;
   polaroidCurrentX    = 0;
   pendingPolaroidX    = 0;
+  _polaroidMaxTravel  = 0;
   card.style.cursor   = 'grabbing';
 
   // Store named refs so we can remove them later
   _polaroidMoveFn = (e2) => {
     if (!polaroidDragActive) return;
     pendingPolaroidX = e2.clientX - polaroidDragStartX;
+    _polaroidMaxTravel = Math.max(_polaroidMaxTravel,
+      Math.hypot(e2.clientX - polaroidDragStartX, e2.clientY - polaroidDragStartY));
   };
   _polaroidUpFn = (e2) => _onPolaroidUp(card);
 
@@ -795,7 +897,17 @@ function _onPolaroidUp(card) {
   if (_polaroidTickFn) { ticker.remove(_polaroidTickFn); _polaroidTickFn = null; }
   _activePolaroidCard = null;
 
-  const threshold = 80;
+  // Tap (no real movement): zoom the polaroid instead of swiping it
+  if (_polaroidMaxTravel < 8) {
+    const idx    = parseInt(card.dataset.index, 10);
+    const rawRot = ((idx * 37 + 13) % 13) - 6;
+    card.style.transform = `translateX(-50%) rotate(${qRot(rawRot)}deg)`;
+    polaroidCurrentX = 0;
+    openPolaroidModal(idx);
+    return;
+  }
+
+  const threshold = Math.max(60, card.offsetWidth * 0.3);
   if (Math.abs(polaroidCurrentX) >= threshold) {
     // Fling it off
     flingPolaroid(card, polaroidCurrentX > 0 ? 'right' : 'left');
@@ -809,6 +921,7 @@ function _onPolaroidUp(card) {
 }
 
 function flingPolaroid(card, direction) {
+  polaroidFlingInProgress = true;
   const animName = direction === 'right' ? 'polaroid-fling-right' : 'polaroid-fling-left';
   card.style.animation = `${animName} .5s steps(10) forwards`;
   card.style.pointerEvents = 'none';
@@ -818,8 +931,49 @@ function flingPolaroid(card, direction) {
     stackTopIndex = (stackTopIndex + 1) % (CONFIG.photos || []).length;
     renderFreeStack();
     if (polaroidFreeStack._reattach) polaroidFreeStack._reattach();
+    polaroidFlingInProgress = false;
   }, { once: true });
 }
+
+/* ------------------------------------------------------------------
+   Polaroid zoom modal — tap a photo to enlarge, tap anywhere to close
+------------------------------------------------------------------ */
+const polaroidModalInner = polaroidModal.querySelector('.polaroid-modal-inner');
+
+function openPolaroidModal(idx) {
+  const photo = (CONFIG.photos || [])[idx];
+  if (!photo) return;
+  polaroidModalInner.innerHTML = '';
+
+  const photoArea = document.createElement('div');
+  photoArea.className = 'polaroid-modal-photo';
+  const img = document.createElement('img');
+  img.alt = photo.caption || '';
+  img.src = photo.src;
+  img.onerror = () => {
+    img.style.display = 'none';
+    photoArea.appendChild(createPlaceholderSVG(idx));
+  };
+  photoArea.appendChild(img);
+  polaroidModalInner.appendChild(photoArea);
+
+  const caption = document.createElement('p');
+  caption.className = 'polaroid-modal-caption';
+  caption.textContent = photo.caption || '';
+  polaroidModalInner.appendChild(caption);
+
+  polaroidModal.classList.remove('hidden');
+  polaroidModalOpen = true;
+}
+
+function closePolaroidModal() {
+  polaroidModal.classList.add('hidden');
+  polaroidModalInner.innerHTML = '';
+  // Delay the flag so the closing tap can't immediately start a swipe below
+  setTimeout(() => { polaroidModalOpen = false; }, 50);
+}
+
+polaroidModal.addEventListener('click', closePolaroidModal);
 
 /* ------------------------------------------------------------------
    11. INIT
