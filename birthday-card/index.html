@@ -19,64 +19,182 @@
        SVG Filter Definitions
        #crayon-displace  — feTurbulence displacement for crayon stroke feel
        #wobble           — mild warp for wobbly borders
+       #paper-grain      — heavier grain for letter panels / polaroids
+       #marker-outline   — bold marker re-outline effect
        Referenced via CSS filter: url(#crayon-displace) etc.
        ============================================================ -->
   <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true">
     <defs>
-      <filter id="crayon-displace" x="-5%" y="-5%" width="110%" height="110%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.04 0.07" numOctaves="3" seed="2" result="noise"/>
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+      <!-- Crayon displacement: stroke wobble -->
+      <filter id="crayon-displace" x="-8%" y="-8%" width="116%" height="116%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.045 0.08" numOctaves="4" seed="2" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
+
+      <!-- Heavier crayon for outlined objects -->
+      <filter id="crayon-heavy" x="-10%" y="-10%" width="120%" height="120%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.055 0.09" numOctaves="4" seed="7" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+
+      <!-- Wobble for doodles and borders -->
       <filter id="wobble" x="-5%" y="-5%" width="110%" height="110%">
         <feTurbulence type="turbulence" baseFrequency="0.02 0.03" numOctaves="2" seed="5" result="noise"/>
         <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+
+      <!-- Paper grain texture filter for overlays -->
+      <filter id="paper-grain" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.65 0.65" numOctaves="5" seed="3" stitchTiles="stitch" result="grain"/>
+        <feColorMatrix type="saturate" values="0" result="gray"/>
+        <feBlend in="SourceGraphic" in2="gray" mode="multiply" result="blended"/>
+        <feComposite in="blended" in2="SourceGraphic" operator="in"/>
+      </filter>
+
+      <!-- Aged/warm paper grain overlay -->
+      <filter id="aged-paper" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9 0.9" numOctaves="6" seed="11" stitchTiles="stitch" result="grain"/>
+        <feColorMatrix type="matrix"
+          values="0.8 0   0   0 0.12
+                  0   0.7 0   0 0.08
+                  0   0   0.5 0 0.02
+                  0   0   0   0.18 0"
+          result="tint"/>
+        <feComposite in="SourceGraphic" in2="tint" operator="over"/>
+      </filter>
+
+      <!-- Tape translucency: semi-transparent yellowish fill -->
+      <filter id="tape-filter" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.12 0.04" numOctaves="3" seed="9" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
     </defs>
   </svg>
 
   <!-- ============================================================
        Background scattered doodles (purely decorative, aria-hidden)
+       All constrained within viewport; no overflow at 360px width.
        ============================================================ -->
   <div class="bg-doodles" aria-hidden="true">
-    <!-- top-left star cluster -->
-    <svg style="position:absolute;top:4%;left:3%;width:80px;height:80px;opacity:.18" viewBox="0 0 80 80">
-      <text x="10" y="32" font-size="28" fill="#EE204D">★</text>
-      <text x="42" y="58" font-size="20" fill="#1F75FE">★</text>
-      <text x="5"  y="65" font-size="14" fill="#FCE883">✦</text>
+
+    <!-- ── BUNTING FLAGS — top of page ── -->
+    <svg class="doodle-bunting" viewBox="0 0 360 60" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+      <!-- string -->
+      <path d="M0 10 Q45 24 90 10 Q135 24 180 10 Q225 24 270 10 Q315 24 360 10"
+            stroke="#B4674D" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".7"/>
+      <!-- flags -->
+      <polygon points="18,10 30,10 24,30"  fill="#EE204D" opacity=".85"/>
+      <polygon points="60,18 72,18 66,38"  fill="#1F75FE" opacity=".85"/>
+      <polygon points="104,10 116,10 110,30" fill="#FCE883" stroke="#FF7538" stroke-width="1" opacity=".85"/>
+      <polygon points="148,18 160,18 154,38" fill="#1CAC78" opacity=".85"/>
+      <polygon points="192,10 204,10 198,30" fill="#926EAE" opacity=".85"/>
+      <polygon points="236,18 248,18 242,38" fill="#FF7538" opacity=".85"/>
+      <polygon points="280,10 292,10 286,30" fill="#FFAACC" opacity=".85"/>
+      <polygon points="324,18 336,18 330,38" fill="#EE204D" opacity=".85"/>
     </svg>
-    <!-- top-right squiggles -->
-    <svg style="position:absolute;top:3%;right:4%;width:100px;height:60px;opacity:.15" viewBox="0 0 100 60">
-      <path d="M5 30 Q20 10 35 30 Q50 50 65 30 Q80 10 95 30" stroke="#FF7538" stroke-width="3" fill="none" stroke-linecap="round"/>
-      <path d="M5 45 Q20 25 35 45 Q50 65 65 45" stroke="#926EAE" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+    <!-- ── TOP-LEFT — star cluster ── -->
+    <svg class="doodle doodle-tl-stars" viewBox="0 0 90 90" aria-hidden="true">
+      <text x="8"  y="34" font-size="30" fill="#EE204D">★</text>
+      <text x="44" y="60" font-size="22" fill="#1F75FE">★</text>
+      <text x="4"  y="70" font-size="15" fill="#FCE883">✦</text>
+      <text x="58" y="28" font-size="14" fill="#1CAC78">✦</text>
+      <circle cx="18" cy="72" r="3" fill="#FF7538"/>
+      <circle cx="72" cy="68" r="4" fill="#926EAE"/>
     </svg>
-    <!-- bottom-left balloon doodle -->
-    <svg style="position:absolute;bottom:8%;left:2%;width:70px;height:110px;opacity:.15" viewBox="0 0 70 110">
-      <ellipse cx="35" cy="38" rx="22" ry="28" fill="#FFAACC" stroke="#EE204D" stroke-width="2"/>
-      <path d="M35 66 Q33 78 36 88 Q38 96 35 104" stroke="#EE204D" stroke-width="1.5" fill="none"/>
-      <line x1="35" y1="66" x2="35" y2="70" stroke="#EE204D" stroke-width="2"/>
+
+    <!-- ── TOP-RIGHT — squiggles ── -->
+    <svg class="doodle doodle-tr-squig" viewBox="0 0 110 70" aria-hidden="true">
+      <path d="M5 35 Q22 12 39 35 Q56 58 73 35 Q90 12 107 35" stroke="#FF7538" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M5 52 Q22 29 39 52 Q56 75 73 52" stroke="#926EAE" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <circle cx="5" cy="35" r="4" fill="#FF7538" opacity=".6"/>
+      <circle cx="107" cy="35" r="4" fill="#FF7538" opacity=".6"/>
     </svg>
-    <!-- bottom-right sun -->
-    <svg style="position:absolute;bottom:6%;right:3%;width:90px;height:90px;opacity:.14" viewBox="0 0 90 90">
-      <circle cx="45" cy="45" r="18" fill="#FCE883" stroke="#FF7538" stroke-width="2.5"/>
-      <g stroke="#FF7538" stroke-width="2" stroke-linecap="round">
-        <line x1="45" y1="10" x2="45" y2="20"/>
-        <line x1="45" y1="70" x2="45" y2="80"/>
-        <line x1="10" y1="45" x2="20" y2="45"/>
-        <line x1="70" y1="45" x2="80" y2="45"/>
-        <line x1="19" y1="19" x2="26" y2="26"/>
-        <line x1="64" y1="64" x2="71" y2="71"/>
-        <line x1="71" y1="19" x2="64" y2="26"/>
-        <line x1="26" y1="64" x2="19" y2="71"/>
+
+    <!-- ── BOTTOM-LEFT — balloon cluster ── -->
+    <svg class="doodle doodle-bl-balloons" viewBox="0 0 90 140" aria-hidden="true">
+      <!-- balloon 1 (red) -->
+      <ellipse cx="28" cy="38" rx="20" ry="27" fill="#EE204D" stroke="#B4674D" stroke-width="2"/>
+      <path d="M28 65 Q26 80 30 95" stroke="#B4674D" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <ellipse cx="28" cy="38" rx="7" ry="10" fill="rgba(255,255,255,.25)" transform="translate(-6,-8)"/>
+      <!-- balloon 2 (blue) -->
+      <ellipse cx="62" cy="28" rx="17" ry="22" fill="#1F75FE" stroke="#B4674D" stroke-width="2"/>
+      <path d="M62 50 Q64 65 60 80" stroke="#B4674D" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <ellipse cx="62" cy="28" rx="6" ry="8" fill="rgba(255,255,255,.25)" transform="translate(-5,-6)"/>
+      <!-- balloon 3 (green, small) -->
+      <ellipse cx="18" cy="20" rx="12" ry="16" fill="#1CAC78" stroke="#B4674D" stroke-width="1.5"/>
+      <path d="M18 36 Q16 48 20 58" stroke="#B4674D" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <!-- strings tied together -->
+      <line x1="28" y1="95" x2="45" y2="120" stroke="#B4674D" stroke-width="1.5"/>
+      <line x1="60" y1="80" x2="45" y2="120" stroke="#B4674D" stroke-width="1.5"/>
+      <line x1="20" y1="58" x2="45" y2="120" stroke="#B4674D" stroke-width="1.5"/>
+      <circle cx="45" cy="121" r="3" fill="#B4674D"/>
+    </svg>
+
+    <!-- ── BOTTOM-RIGHT — sun + rays ── -->
+    <svg class="doodle doodle-br-sun" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="20" fill="#FCE883" stroke="#FF7538" stroke-width="3"/>
+      <g stroke="#FF7538" stroke-width="2.5" stroke-linecap="round">
+        <line x1="50" y1="10" x2="50" y2="22"/>
+        <line x1="50" y1="78" x2="50" y2="90"/>
+        <line x1="10" y1="50" x2="22" y2="50"/>
+        <line x1="78" y1="50" x2="90" y2="50"/>
+        <line x1="21" y1="21" x2="29" y2="29"/>
+        <line x1="71" y1="71" x2="79" y2="79"/>
+        <line x1="79" y1="21" x2="71" y2="29"/>
+        <line x1="29" y1="71" x2="21" y2="79"/>
       </g>
+      <!-- face -->
+      <circle cx="44" cy="46" r="2.5" fill="#FF7538"/>
+      <circle cx="56" cy="46" r="2.5" fill="#FF7538"/>
+      <path d="M42 56 Q50 62 58 56" stroke="#FF7538" stroke-width="2" fill="none" stroke-linecap="round"/>
     </svg>
-    <!-- mid-left dots -->
-    <svg style="position:absolute;top:42%;left:1%;width:40px;height:80px;opacity:.12" viewBox="0 0 40 80">
-      <circle cx="10" cy="10" r="5" fill="#1CAC78"/>
-      <circle cx="28" cy="28" r="4" fill="#1F75FE"/>
-      <circle cx="8"  cy="50" r="6" fill="#FCE883"/>
-      <circle cx="26" cy="68" r="4" fill="#EE204D"/>
+
+    <!-- ── MID-LEFT — dot cluster ── -->
+    <svg class="doodle doodle-ml-dots" viewBox="0 0 50 100" aria-hidden="true">
+      <circle cx="12" cy="10" r="6" fill="#1CAC78"/>
+      <circle cx="34" cy="28" r="5" fill="#1F75FE"/>
+      <circle cx="10" cy="52" r="7" fill="#FCE883" stroke="#FF7538" stroke-width="1.5"/>
+      <circle cx="32" cy="72" r="5" fill="#EE204D"/>
+      <circle cx="14" cy="90" r="4" fill="#926EAE"/>
     </svg>
-  </div>
+
+    <!-- ── MID-RIGHT — party hat ── -->
+    <svg class="doodle doodle-mr-hat" viewBox="0 0 70 90" aria-hidden="true">
+      <!-- hat body -->
+      <polygon points="35,5 8,80 62,80" fill="#EE204D" stroke="#B4674D" stroke-width="2"/>
+      <!-- stripes on hat -->
+      <line x1="21" y1="42" x2="49" y2="42" stroke="rgba(255,255,255,.6)" stroke-width="4"/>
+      <line x1="14" y1="62" x2="56" y2="62" stroke="rgba(255,255,255,.5)" stroke-width="4"/>
+      <!-- brim -->
+      <ellipse cx="35" cy="80" rx="27" ry="8" fill="#B4674D" stroke="#B4674D" stroke-width="2"/>
+      <!-- pompom -->
+      <circle cx="35" cy="5" r="7" fill="#FCE883" stroke="#FF7538" stroke-width="1.5"/>
+      <!-- squiggly band -->
+      <path d="M12 72 Q20 65 28 72 Q36 79 44 72 Q52 65 58 72" stroke="white" stroke-width="1.5" fill="none" opacity=".7"/>
+    </svg>
+
+    <!-- ── BOTTOM-CENTER — small scattered stars ── -->
+    <svg class="doodle doodle-bc-stars" viewBox="0 0 200 50" aria-hidden="true">
+      <text x="10"  y="30" font-size="18" fill="#FF7538">★</text>
+      <text x="50"  y="20" font-size="12" fill="#1CAC78">✦</text>
+      <text x="90"  y="35" font-size="20" fill="#EE204D">★</text>
+      <text x="138" y="18" font-size="14" fill="#926EAE">✦</text>
+      <text x="170" y="32" font-size="16" fill="#1F75FE">★</text>
+    </svg>
+
+    <!-- ── TOP-CENTER — scattered confetti dots ── -->
+    <svg class="doodle doodle-tc-confetti" viewBox="0 0 180 40" aria-hidden="true">
+      <rect x="10"  y="8"  width="9"  height="5"  rx="1" fill="#EE204D"  transform="rotate(-20,14,10)"/>
+      <rect x="40"  y="15" width="7"  height="4"  rx="1" fill="#1CAC78"  transform="rotate(15,43,17)"/>
+      <rect x="78"  y="5"  width="10" height="5"  rx="1" fill="#1F75FE"  transform="rotate(30,83,7)"/>
+      <rect x="110" y="18" width="8"  height="4"  rx="1" fill="#FCE883"  transform="rotate(-10,114,20)"/>
+      <rect x="148" y="8"  width="9"  height="5"  rx="1" fill="#926EAE"  transform="rotate(25,152,10)"/>
+      <circle cx="165" cy="28" r="4" fill="#FF7538"/>
+      <circle cx="25"  cy="32" r="3" fill="#FFAACC"/>
+    </svg>
+
+  </div><!-- /bg-doodles -->
 
   <!-- ============================================================
        Confetti Canvas — full-screen, pointer-events none
@@ -116,8 +234,12 @@
 
           <!-- Wax seal (SVG stamp) -->
           <svg class="wax-seal" viewBox="0 0 72 72" aria-hidden="true">
-            <circle cx="36" cy="36" r="30" fill="#EE204D" stroke="rgba(44,26,14,.4)" stroke-width="2"/>
-            <circle cx="36" cy="36" r="24" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <!-- outer ring with spike border -->
+            <circle cx="36" cy="36" r="30" fill="#EE204D" stroke="#B4674D" stroke-width="2.5"/>
+            <!-- decorative inner ring -->
+            <circle cx="36" cy="36" r="23" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.8" stroke-dasharray="5 3"/>
+            <!-- highlight sheen -->
+            <ellipse cx="28" cy="24" rx="8" ry="5" fill="rgba(255,255,255,.2)" transform="rotate(-20,28,24)"/>
             <text x="36" y="44" text-anchor="middle" font-family="serif" font-size="24">🤝</text>
           </svg>
 
@@ -153,20 +275,16 @@
         <!-- balloons -->
         <ellipse cx="30" cy="28" rx="14" ry="18" fill="#EE204D" opacity=".85"/>
         <line x1="30" y1="46" x2="28" y2="58" stroke="#B4674D" stroke-width="1.5"/>
+        <ellipse cx="30" cy="28" rx="5" ry="7" fill="rgba(255,255,255,.25)" transform="translate(-4,-6)"/>
         <ellipse cx="58" cy="22" rx="12" ry="16" fill="#1F75FE" opacity=".85"/>
         <line x1="58" y1="38" x2="60" y2="58" stroke="#B4674D" stroke-width="1.5"/>
         <ellipse cx="82" cy="30" rx="11" ry="14" fill="#FCE883" stroke="#FF7538" stroke-width="1.5" opacity=".9"/>
         <line x1="82" y1="44" x2="80" y2="58" stroke="#B4674D" stroke-width="1.5"/>
-        <!-- sun top-right -->
-        <circle cx="248" cy="18" r="12" fill="#FCE883" stroke="#FF7538" stroke-width="1.5"/>
-        <g stroke="#FF7538" stroke-width="1.5" stroke-linecap="round">
-          <line x1="248" y1="2"  x2="248" y2="6"/>
-          <line x1="248" y1="30" x2="248" y2="34"/>
-          <line x1="233" y1="18" x2="237" y2="18"/>
-          <line x1="259" y1="18" x2="263" y2="18"/>
-          <line x1="238" y1="8"  x2="241" y2="11"/>
-          <line x1="255" y1="25" x2="258" y2="28"/>
-        </g>
+        <!-- party hat top-right -->
+        <polygon points="248,4 234,44 262,44" fill="#926EAE" stroke="#B4674D" stroke-width="1.5"/>
+        <line x1="237" y1="36" x2="259" y2="36" stroke="rgba(255,255,255,.7)" stroke-width="3"/>
+        <ellipse cx="248" cy="44" rx="14" ry="5" fill="#B4674D"/>
+        <circle cx="248" cy="4" r="5" fill="#FCE883" stroke="#FF7538" stroke-width="1"/>
         <!-- squiggle separator -->
         <path d="M100 52 Q115 42 130 52 Q145 62 160 52 Q175 42 190 52 Q205 62 220 52" stroke="#926EAE" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>
       </svg>
@@ -182,6 +300,9 @@
         <circle cx="200" cy="30" r="5" fill="#1F75FE"/>
         <circle cx="228" cy="14" r="4" fill="#FFAACC"/>
         <circle cx="255" cy="36" r="6" fill="#926EAE"/>
+        <!-- confetti rects -->
+        <rect x="88" y="8" width="9" height="5" rx="1" fill="#FF7538" transform="rotate(-25,92,10)"/>
+        <rect x="148" y="30" width="8" height="4" rx="1" fill="#1CAC78" transform="rotate(15,152,32)"/>
         <!-- stars -->
         <text x="100" y="28" font-size="16" fill="#FF7538">★</text>
         <text x="140" y="22" font-size="12" fill="#1CAC78">✦</text>
@@ -202,22 +323,51 @@
 
         <!-- Panel 1 (always visible, top) -->
         <div class="letter-panel" id="panel-1" style="transform-origin: bottom center; position:relative; z-index:4;">
+          <!-- Decorative coffee-stain smudge (top-right corner, low opacity) -->
+          <svg class="panel-smudge" viewBox="0 0 60 60" aria-hidden="true">
+            <ellipse cx="40" cy="20" rx="18" ry="12" fill="rgba(180,103,77,.10)" transform="rotate(-15,40,20)"/>
+            <ellipse cx="44" cy="22" rx="10" ry="6" fill="rgba(180,103,77,.06)" transform="rotate(-15,44,22)"/>
+          </svg>
+          <!-- Crayon smudge (bottom-left) -->
+          <svg class="panel-crayon-smudge panel-crayon-smudge--red" viewBox="0 0 50 20" aria-hidden="true">
+            <rect x="0" y="4" width="48" height="10" rx="5" fill="#EE204D" opacity=".13" transform="rotate(-3,24,9)"/>
+          </svg>
           <h2 id="letter-title-el"></h2>
           <p id="letter-p0"></p>
         </div>
 
         <!-- Panel 2: opens downward, transform-origin top -->
         <div class="letter-panel" id="panel-2" style="transform-origin: top center; position:relative; z-index:3; transform: rotateX(-180deg);">
+          <!-- coffee ring stain -->
+          <svg class="panel-smudge panel-smudge--ring" viewBox="0 0 60 60" aria-hidden="true">
+            <circle cx="20" cy="40" r="16" fill="none" stroke="rgba(180,103,77,.12)" stroke-width="4"/>
+            <circle cx="20" cy="40" r="12" fill="none" stroke="rgba(180,103,77,.06)" stroke-width="2"/>
+          </svg>
+          <!-- blue crayon smudge -->
+          <svg class="panel-crayon-smudge panel-crayon-smudge--blue" viewBox="0 0 50 20" aria-hidden="true">
+            <rect x="0" y="4" width="44" height="8" rx="4" fill="#1F75FE" opacity=".10" transform="rotate(2,22,8)"/>
+          </svg>
           <p id="letter-p1"></p>
         </div>
 
         <!-- Panel 3: zig-zag, opens downward, transform-origin top -->
         <div class="letter-panel" id="panel-3" style="transform-origin: top center; position:relative; z-index:2; transform: rotateX(180deg);">
+          <!-- smudge green -->
+          <svg class="panel-crayon-smudge panel-crayon-smudge--green" viewBox="0 0 50 20" aria-hidden="true">
+            <rect x="2" y="5" width="46" height="9" rx="4" fill="#1CAC78" opacity=".09" transform="rotate(-2,25,9)"/>
+          </svg>
           <p id="letter-p2"></p>
         </div>
 
         <!-- Panel 4: opens downward, transform-origin top -->
         <div class="letter-panel" id="panel-4" style="transform-origin: top center; position:relative; z-index:1; transform: rotateX(-180deg);">
+          <!-- violet smudge + star doodle -->
+          <svg class="panel-crayon-smudge panel-crayon-smudge--violet" viewBox="0 0 50 20" aria-hidden="true">
+            <rect x="0" y="3" width="40" height="10" rx="5" fill="#926EAE" opacity=".10" transform="rotate(3,20,8)"/>
+          </svg>
+          <svg class="panel-star-doodle" viewBox="0 0 40 40" aria-hidden="true">
+            <text x="4" y="28" font-size="22" fill="#FF7538" opacity=".18">★</text>
+          </svg>
           <p id="letter-p3"></p>
           <span class="signoff" id="letter-signoff-el"></span>
           <p class="ps">P.S. There's something else in the envelope… 📸 Pull out the photos!</p>
