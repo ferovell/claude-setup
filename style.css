@@ -1,6 +1,7 @@
 /* ============================================================
    style.css — Birthday Card Visual Style
-   "Crayola crayon" aesthetic: wobbly borders, stop-motion feel
+   "Crayola crayon" aesthetic: wobbly borders, stop-motion feel,
+   rich paper textures, hand-drawn outlines, artsy detail.
    ============================================================ */
 
 /* ---------- Google Fonts ---------- */
@@ -26,6 +27,11 @@
   --shadow-sm:  3px 3px 0 rgba(44,26,14,.25);
   --shadow-md:  5px 5px 0 rgba(44,26,14,.3);
   --shadow-lg:  8px 8px 0 rgba(44,26,14,.35);
+
+  /* paper grain SVG as data URI — used on multiple elements */
+  --grain-sm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  --grain-md: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  --grain-lg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.68' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
 }
 
 /* ---------- Reset & Base ---------- */
@@ -41,16 +47,31 @@ html, body {
   font-size: 16px;
 }
 
-/* Grain overlay — SVG feTurbulence as data-URI */
+/* ── Rich page grain overlay — two layered noise passes ── */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: .35;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-  background-size: 300px 300px;
+  opacity: .42;
+  /* coarser fiber layer + fine noise layer */
+  background-image:
+    var(--grain-lg),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95 0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 320px 320px, 160px 160px;
+  mix-blend-mode: multiply;
+}
+
+/* Warm amber tint over the grain for aged-paper feel */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, rgba(252,232,131,.08) 0%, transparent 70%),
+              radial-gradient(ellipse 100% 60% at 50% 100%, rgba(180,103,77,.06) 0%, transparent 70%);
 }
 
 /* ---------- Stage wrapper ---------- */
@@ -73,6 +94,52 @@ body::before {
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+}
+
+/* shared doodle base — positioned by individual classes */
+.doodle {
+  position: absolute;
+  overflow: visible;
+}
+
+/* Bunting — full-width strip at top */
+.doodle-bunting {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  opacity: .25;
+  filter: url(#wobble);
+}
+
+/* Individual doodle placements */
+.doodle-tl-stars   { top: 4%;  left: 2%;  width: 90px;  height: 90px;  opacity: .18; transform: rotate(-5deg); }
+.doodle-tr-squig   { top: 6%;  right: 3%; width: 110px; height: 70px;  opacity: .16; transform: rotate(4deg);  }
+.doodle-bl-balloons{ bottom: 6%; left: 1%; width: 90px;  height: 140px; opacity: .17; transform: rotate(3deg);  }
+.doodle-br-sun     { bottom: 5%; right: 2%; width: 100px; height: 100px; opacity: .15; transform: rotate(-6deg); }
+.doodle-ml-dots    { top: 40%;  left: 0%;  width: 50px;  height: 100px; opacity: .13; }
+.doodle-mr-hat     { top: 30%;  right: 1%; width: 70px;  height: 90px;  opacity: .14; transform: rotate(-8deg); }
+.doodle-bc-stars   { bottom: 2%; left: 50%; width: 200px; height: 50px;  opacity: .14; transform: translateX(-50%) rotate(-2deg); }
+.doodle-tc-confetti{ top: 8%;   left: 50%; width: 180px; height: 40px;  opacity: .18; transform: translateX(-50%) rotate(1deg); }
+
+/* Subtle wiggle on background doodles */
+.doodle-tl-stars, .doodle-br-sun, .doodle-mr-hat {
+  animation: bg-drift 8s steps(8) infinite;
+}
+.doodle-bl-balloons {
+  animation: bg-drift 10s steps(8) infinite reverse;
+}
+.doodle-tr-squig {
+  animation: bg-drift 7s steps(6) infinite;
+}
+
+@keyframes bg-drift {
+  0%   { transform: rotate(var(--base-rot, 0deg)) translateY(0);    }
+  25%  { transform: rotate(var(--base-rot, 0deg)) translateY(-4px);  }
+  50%  { transform: rotate(var(--base-rot, 0deg)) translateY(0);    }
+  75%  { transform: rotate(var(--base-rot, 0deg)) translateY(3px);  }
+  100% { transform: rotate(var(--base-rot, 0deg)) translateY(0);    }
 }
 
 /* ---------- SVG Filters (defined in HTML, referenced here) ---------- */
@@ -99,6 +166,10 @@ body::before {
   font-family: var(--font-hand);
   font-size: clamp(1rem, 3vmin, 1.4rem);
   color: var(--crayon-violet);
+  /* hand-drawn outline: main color + offset highlight */
+  text-shadow:
+    2px 2px 0 rgba(44,26,14,.45),
+    -1px -1px 0 rgba(255,255,255,.6);
   filter: url(#crayon-displace);
   margin-bottom: 12px;
   animation: hint-wiggle 2s steps(4) infinite;
@@ -145,15 +216,35 @@ body::before {
 
 #envelope-wrap.flap-open { animation: none; }
 
-/* Envelope body */
+/* Envelope body — with paper grain + thick hand-drawn outline */
 .env-body {
   position: relative;
   width: 100%;
   padding-bottom: 62%;             /* landscape ratio */
   background: var(--crayon-yellow);
-  border: 3px solid rgba(44,26,14,.55);
+  /* thick dark-brown outline (hand-drawn look) + highlight re-outline */
+  border: 4px solid rgba(44,26,14,.65);
+  outline: 2px solid rgba(252,232,131,.55);
+  outline-offset: -7px;
   border-radius: 255px 12px 230px 18px / 18px 230px 12px 255px;
-  box-shadow: var(--shadow-lg);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 0 0 6px rgba(252,232,131,.3);   /* inner warmth */
+  filter: url(#crayon-heavy);
+}
+
+/* Paper grain on envelope body */
+.env-body::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: .28;
+  background-image: var(--grain-md);
+  background-size: 260px 260px;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: multiply;
 }
 
 /* Inner envelope shading */
@@ -161,8 +252,10 @@ body::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, rgba(255,255,255,.25) 0%, transparent 55%);
+  background: linear-gradient(160deg, rgba(255,255,255,.30) 0%, transparent 55%);
+  border-radius: inherit;
   pointer-events: none;
+  z-index: 2;
 }
 
 /* Envelope pocket — clips the peeking card and photos */
@@ -174,7 +267,7 @@ body::before {
   /* top half of envelope body = envelope opening */
   top: 38%;
   overflow: hidden;
-  z-index: 2;
+  z-index: 3;
 }
 
 /* Wax seal */
@@ -183,24 +276,24 @@ body::before {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: clamp(48px, 10vmin, 72px);
-  height: clamp(48px, 10vmin, 72px);
-  z-index: 5;
+  width: clamp(50px, 11vmin, 76px);
+  height: clamp(50px, 11vmin, 76px);
+  z-index: 6;
   filter: url(#crayon-displace);
+  drop-shadow: 3px 3px 0 rgba(44,26,14,.4);
   transition: opacity .3s steps(3);
 }
 
 #envelope-wrap.flap-open .wax-seal { opacity: 0; pointer-events: none; }
 
-/* Envelope flap */
+/* Envelope flap — with thick outline */
 .env-flap {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 55%;
-  background: #F4D03F;
-  border: 3px solid rgba(44,26,14,.45);
+  border: 4px solid rgba(44,26,14,.5);
   border-bottom: none;
   border-radius: 12px 6px 0 0;
   transform-origin: top center;
@@ -210,7 +303,20 @@ body::before {
   transition: transform .6s steps(8);
   z-index: 4;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
-  background: linear-gradient(170deg, #FCE883 0%, #F4D03F 100%);
+  background: linear-gradient(170deg, #FCE883 0%, #F4D03F 55%, #EAC117 100%);
+  filter: url(#crayon-heavy);
+}
+
+/* flap grain */
+.env-flap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: .20;
+  background-image: var(--grain-sm);
+  background-size: 180px 180px;
+  pointer-events: none;
+  mix-blend-mode: multiply;
 }
 
 #envelope-wrap.flap-open .env-flap {
@@ -232,7 +338,7 @@ body::before {
   width: 45%;
   height: 140%;          /* taller than pocket so it peeks */
   background: white;
-  border: 3px solid rgba(44,26,14,.4);
+  border: 3px solid rgba(44,26,14,.45);
   border-radius: 8px 8px 4px 4px;
   box-shadow: var(--shadow-md);
   cursor: grab;
@@ -247,6 +353,9 @@ body::before {
   opacity: 0;
   pointer-events: none;
   touch-action: none;
+  /* card grain overlay */
+  background-image: var(--grain-sm);
+  background-size: 180px 180px;
 }
 
 .peeking-photos {
@@ -303,15 +412,51 @@ body::before {
   left: 50%;
   transform: translate(-50%, -50%);
   width: clamp(220px, 60vmin, 360px);
-  background: white;
-  border: 4px solid rgba(44,26,14,.5);
+  /* rich white + grain texture */
+  background: #FFFDF7;
+  border: 4px solid rgba(44,26,14,.6);
+  /* offset highlight stroke in orange (marker re-outline) */
+  outline: 2px solid rgba(255,117,56,.45);
+  outline-offset: -8px;
   border-radius: 230px 18px 210px 22px / 22px 215px 18px 230px;
-  box-shadow: var(--shadow-lg);
+  box-shadow:
+    8px 8px 0 rgba(44,26,14,.38),
+    inset 0 0 0 1px rgba(255,255,255,.9);
   padding: clamp(24px, 5vmin, 40px) clamp(20px, 4vmin, 32px);
   z-index: 20;
   text-align: center;
-  filter: url(#crayon-displace);
+  filter: url(#crayon-heavy);
+  /* paper grain overlay via pseudo-element */
+  overflow: hidden;
 }
+
+/* paper grain on greeting card */
+#greeting-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: .22;
+  background-image: var(--grain-md);
+  background-size: 260px 260px;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: multiply;
+  border-radius: inherit;
+}
+
+/* light sheen gradient */
+#greeting-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, rgba(255,255,255,.38) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+/* ensure content sits above pseudo-elements */
+#greeting-card > * { position: relative; z-index: 1; }
 
 #greeting-card h1 {
   font-family: var(--font-hand);
@@ -319,12 +464,20 @@ body::before {
   color: var(--crayon-red);
   line-height: 1.2;
   margin-bottom: .75rem;
+  /* bold outline + highlight stroke */
+  text-shadow:
+    3px 3px 0 rgba(44,26,14,.35),
+    -1px -1px 0 rgba(255,255,255,.7),
+    0 0 0 rgba(255,117,56,0);
+  filter: url(#crayon-displace);
 }
 
 /* card doodles */
 .card-doodles {
   pointer-events: none;
   user-select: none;
+  position: relative;
+  z-index: 1;
 }
 
 /* ---------- Confetti Canvas ---------- */
@@ -358,27 +511,45 @@ body::before {
   user-select: none;
 }
 
-/* Each letter panel */
+/* ─── Each letter panel ───
+   Realistic lined/aged paper feel:
+   - subtle fiber noise via background-image
+   - slightly uneven clip via border-radius trick
+   - thick dark-brown outline + highlight stroke
+   - unique tint per panel (see panel overrides below)
+*/
 .letter-panel {
   position: relative;
-  background: white;
-  border: 3px solid rgba(44,26,14,.4);
+  /* warm off-white base */
+  background: #FEFCF4;
+  border: 3px solid rgba(44,26,14,.5);
+  /* offset highlight in a muted crayon color — gives marker re-outline look */
+  outline: 1.5px solid rgba(255,117,56,.35);
+  outline-offset: -5px;
   border-radius: 6px 18px 6px 18px / 18px 6px 18px 6px;
   overflow: hidden;
-  /* lined-paper */
+  /* lined paper: blue rule + red margin line */
   background-image:
+    /* margin line */
+    linear-gradient(to right, rgba(238,32,77,.25) 0px, rgba(238,32,77,.25) 1.5px, transparent 1.5px),
+    /* horizontal rules */
     repeating-linear-gradient(
       transparent,
       transparent 27px,
-      #BDE0FF 28px
-    );
-  background-size: 100% 28px;
-  background-position-y: 40px;
-  padding: 12px 20px 20px;
-  box-shadow: var(--shadow-sm);
+      rgba(31,117,254,.18) 28px
+    ),
+    /* fiber noise layer */
+    var(--grain-sm);
+  background-size: 100% 100%, 100% 28px, 180px 180px;
+  background-position: 32px 0, 0 40px, 0 0;
+  padding: 12px 20px 20px 48px;
+  box-shadow:
+    var(--shadow-sm),
+    inset 2px 0 0 rgba(238,32,77,.15);   /* left margin blush */
   transform-origin: top center;
   /* start folded */
   transition: transform .1s steps(2);
+  filter: url(#crayon-displace);
 }
 
 /* crease shadow on folded panels */
@@ -388,10 +559,32 @@ body::before {
   top: 0;
   left: 0;
   right: 0;
-  height: 10px;
-  background: linear-gradient(to bottom, rgba(0,0,0,.15), transparent);
+  height: 12px;
+  background: linear-gradient(to bottom, rgba(0,0,0,.18), transparent);
   pointer-events: none;
-  z-index: 1;
+  z-index: 10;
+}
+
+/* ── Per-panel tint variations ── */
+#panel-1 {
+  background-color: #FEFCF4;   /* warm cream */
+  border-color: rgba(44,26,14,.5);
+  outline-color: rgba(255,117,56,.35);
+}
+#panel-2 {
+  background-color: #F4F8FF;   /* cool sky tint */
+  border-color: rgba(31,117,254,.55);
+  outline-color: rgba(31,117,254,.25);
+}
+#panel-3 {
+  background-color: #F5FFF7;   /* minty tint */
+  border-color: rgba(28,172,120,.55);
+  outline-color: rgba(28,172,120,.28);
+}
+#panel-4 {
+  background-color: #FFF5FD;   /* rosy tint */
+  border-color: rgba(146,110,174,.55);
+  outline-color: rgba(146,110,174,.28);
 }
 
 .letter-panel h2 {
@@ -401,6 +594,9 @@ body::before {
   margin-bottom: 16px;
   margin-top: 8px;
   filter: url(#crayon-displace);
+  text-shadow:
+    2px 2px 0 rgba(44,26,14,.3),
+    -1px -1px 0 rgba(255,255,255,.6);
 }
 
 .letter-panel p {
@@ -417,6 +613,7 @@ body::before {
   color: var(--crayon-violet);
   margin-top: 16px;
   display: block;
+  filter: url(#crayon-displace);
 }
 
 .letter-panel .ps {
@@ -424,6 +621,47 @@ body::before {
   font-family: var(--font-hand);
   font-size: clamp(.85rem, 2.5vmin, 1rem);
   color: var(--crayon-orange);
+}
+
+/* Decorative smudge SVGs inside panels */
+.panel-smudge {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+.panel-smudge--ring {
+  top: auto;
+  bottom: 8px;
+  right: auto;
+  left: 6px;
+}
+
+.panel-crayon-smudge {
+  position: absolute;
+  bottom: 6px;
+  left: 36px;
+  width: 80px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+.panel-crayon-smudge--red   { bottom: 6px;  left: 36px; }
+.panel-crayon-smudge--blue  { bottom: 10px; left: 40px; }
+.panel-crayon-smudge--green { bottom: 6px;  left: 36px; }
+.panel-crayon-smudge--violet{ bottom: 6px;  left: 36px; }
+
+.panel-star-doodle {
+  position: absolute;
+  bottom: 30px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .fold-hint {
@@ -434,6 +672,7 @@ body::before {
   margin-bottom: 4px;
   filter: url(#crayon-displace);
   animation: hint-wiggle 2.5s steps(4) infinite;
+  text-shadow: 2px 2px 0 rgba(44,26,14,.25);
 }
 
 /* ---------- STAGE 4 — Polaroid Gallery ---------- */
@@ -476,42 +715,115 @@ body::before {
   bottom: 32%;
 }
 
-/* Individual polaroid */
+/* ─── Individual polaroid ───
+   Realistic off-white Polaroid with:
+   - vertical sheen gradient
+   - inner shadow around photo window
+   - paper grain
+   - tape strip SVG replacement in ::before (improved)
+   - hard-offset drop shadow
+*/
 .polaroid {
   position: absolute;
   bottom: 0;
   left: 50%;
   width: clamp(140px, 40vmin, 220px);
-  background: white;
-  border: 3px solid rgba(44,26,14,.3);
-  box-shadow: var(--shadow-md);
+  /* off-white Polaroid stock — slightly warm */
+  background: #FDFAF2;
+  border: 3.5px solid rgba(44,26,14,.4);
+  /* hard offset shadow (classic Polaroid look) */
+  box-shadow:
+    5px 5px 0 rgba(44,26,14,.32),
+    8px 7px 0 rgba(44,26,14,.14);
   padding: clamp(8px, 2vmin, 12px);
-  padding-bottom: clamp(28px, 7vmin, 44px);
-  border-radius: 4px;
+  padding-bottom: clamp(32px, 8vmin, 48px);
+  border-radius: 4px 6px 4px 6px / 6px 4px 6px 4px;
   transform-origin: center bottom;
   pointer-events: none;
   user-select: none;
+  /* paper grain on polaroid frame */
+  background-image: var(--grain-sm);
+  background-size: 180px 180px;
+  /* vertical sheen gradient on top */
+  position: absolute;
+  overflow: visible;
 }
 
-/* tape strip on top of polaroid */
+/* Sheen gradient overlay on polaroid */
+.polaroid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  /* subtle vertical sheen */
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,.35) 0%,
+    rgba(255,255,255,.12) 30%,
+    transparent 70%,
+    rgba(44,26,14,.04) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Tape strip — translucent, torn-edge look using clip-path */
 .polaroid::before {
   content: '';
   position: absolute;
-  top: -10px;
+  top: -9px;
   left: 50%;
-  transform: translateX(-50%) rotate(-3deg);
-  width: 40%;
-  height: 18px;
-  background: rgba(252,232,131,.7);
-  border: 1px solid rgba(44,26,14,.2);
-  border-radius: 2px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  width: 42%;
+  height: 20px;
+  /* translucent warm yellow tape */
+  background: rgba(252,232,131,.62);
+  /* torn-edge mask via clip-path points */
+  clip-path: polygon(
+    0%   15%,
+    3%   0%,
+    8%   18%,
+    14%  3%,
+    20%  16%,
+    26%  2%,
+    33%  19%,
+    40%  4%,
+    47%  17%,
+    54%  1%,
+    61%  18%,
+    68%  3%,
+    75%  17%,
+    82%  2%,
+    89%  19%,
+    95%  4%,
+    100% 15%,
+    100% 85%,
+    95%  100%,
+    88%  82%,
+    81%  97%,
+    74%  83%,
+    67%  100%,
+    60%  84%,
+    53%  97%,
+    46%  81%,
+    39%  98%,
+    32%  83%,
+    25%  99%,
+    18%  82%,
+    11%  98%,
+    4%   83%,
+    0%   96%
+  );
+  border: none;
+  filter: url(#tape-filter);
+  z-index: 5;
 }
 
 .polaroid.top-card {
   pointer-events: auto;
 }
 
-/* photo area inside polaroid */
+/* photo area inside polaroid — with inner shadow around the photo window */
 .polaroid-photo {
   width: 100%;
   /* 4:3 */
@@ -519,6 +831,12 @@ body::before {
   position: relative;
   overflow: hidden;
   background: #ddd;
+  /* inset shadow = inner frame around photo window */
+  box-shadow:
+    inset 1px 1px 3px rgba(44,26,14,.35),
+    inset -1px -1px 3px rgba(44,26,14,.2);
+  border-radius: 1px;
+  z-index: 1;
 }
 
 .polaroid-photo img {
@@ -538,6 +856,7 @@ body::before {
   height: 100%;
 }
 
+/* handwritten caption — slightly rotated, sits below photo */
 .polaroid-caption {
   font-family: var(--font-hand);
   font-size: clamp(.75rem, 2.2vmin, .95rem);
@@ -545,6 +864,12 @@ body::before {
   text-align: center;
   margin-top: 6px;
   line-height: 1.3;
+  /* slight rotation for handwritten feel */
+  transform: rotate(-1.5deg);
+  display: block;
+  position: relative;
+  z-index: 3;
+  filter: url(#crayon-displace);
 }
 
 /* swipe hint */
@@ -555,6 +880,7 @@ body::before {
   margin-top: 12px;
   filter: url(#crayon-displace);
   animation: hint-wiggle 2s steps(4) infinite;
+  text-shadow: 2px 2px 0 rgba(44,26,14,.25);
 }
 
 /* ---------- Freestanding greeting-card (pulled out) ---------- */
@@ -590,7 +916,7 @@ body::before {
   100% { transform: translateX(400px) rotate(55deg);  opacity: 0; }
 }
 
-/* ---------- Scene Navigation Bar (Bug 5) ---------- */
+/* ---------- Scene Navigation Bar ---------- */
 .scene-nav {
   position: fixed;
   bottom: 16px;
@@ -600,28 +926,52 @@ body::before {
   gap: 12px;
   z-index: 100;
   background: var(--paper);
-  border: 3px solid rgba(44,26,14,.4);
+  border: 3px solid rgba(44,26,14,.5);
   border-radius: 255px 12px 230px 18px / 18px 230px 12px 255px;
   padding: 8px 16px;
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    var(--shadow-md),
+    inset 0 1px 0 rgba(255,255,255,.8);
   filter: url(#crayon-displace);
 }
+
+/* Nav buttons — each gets a distinct Crayola color */
 .nav-btn {
   font-family: var(--font-hand);
   font-size: clamp(.85rem, 2.5vmin, 1rem);
   background: none;
-  border: 2px solid rgba(44,26,14,.3);
+  border: 2.5px solid rgba(44,26,14,.4);
   border-radius: 200px 8px 190px 12px / 8px 180px 12px 200px;
   padding: 6px 14px;
   cursor: pointer;
   color: var(--ink);
-  transition: background .1s steps(2);
+  transition: background .1s steps(2), border-color .1s steps(2);
+  /* text shadow for hand-drawn legibility */
+  text-shadow: 1px 1px 0 rgba(255,255,255,.6);
 }
-.nav-btn--active {
-  background: var(--crayon-yellow);
+
+/* Letter button: blue crayon */
+#nav-letter-btn {
+  border-color: rgba(31,117,254,.6);
 }
-.nav-btn:active {
-  background: var(--crayon-orange);
+#nav-letter-btn.nav-btn--active {
+  background: rgba(31,117,254,.15);
+  border-color: rgba(31,117,254,.8);
+}
+#nav-letter-btn:active {
+  background: rgba(31,117,254,.3);
+}
+
+/* Gallery button: green crayon */
+#nav-gallery-btn {
+  border-color: rgba(28,172,120,.6);
+}
+#nav-gallery-btn.nav-btn--active {
+  background: rgba(28,172,120,.15);
+  border-color: rgba(28,172,120,.8);
+}
+#nav-gallery-btn:active {
+  background: rgba(28,172,120,.3);
 }
 
 /* ---------- Polaroid Modal (Bug 7) ---------- */
@@ -637,20 +987,63 @@ body::before {
 .polaroid-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(44,26,14,.55);
+  background: rgba(44,26,14,.6);
 }
 .polaroid-modal-inner {
   position: relative;
   z-index: 1;
   width: min(90vmin, 340px);
-  background: white;
-  border: 4px solid rgba(44,26,14,.5);
+  /* off-white Polaroid stock with grain */
+  background: #FDFAF2;
+  background-image: var(--grain-sm);
+  background-size: 180px 180px;
+  border: 4px solid rgba(44,26,14,.55);
+  outline: 1.5px solid rgba(255,117,56,.4);
+  outline-offset: -8px;
   border-radius: 6px;
   padding: clamp(10px, 3vmin, 16px);
-  padding-bottom: clamp(36px, 8vmin, 52px);
-  box-shadow: var(--shadow-lg);
+  padding-bottom: clamp(40px, 9vmin, 56px);
+  box-shadow:
+    8px 8px 0 rgba(44,26,14,.38),
+    12px 10px 0 rgba(44,26,14,.14);
   animation: modal-pop .3s steps(5) forwards;
+  filter: url(#crayon-displace);
 }
+
+/* modal sheen */
+.polaroid-modal-inner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.3) 0%, transparent 40%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* modal tape strip */
+.polaroid-modal-inner::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1.5deg);
+  width: 38%;
+  height: 22px;
+  background: rgba(252,232,131,.65);
+  clip-path: polygon(
+    0% 15%, 3% 0%, 8% 18%, 14% 3%, 20% 16%,
+    26% 2%, 33% 19%, 40% 4%, 47% 17%, 54% 1%,
+    61% 18%, 68% 3%, 75% 17%, 82% 2%, 89% 19%,
+    95% 4%, 100% 15%,
+    100% 85%, 95% 100%, 88% 82%, 81% 97%,
+    74% 83%, 67% 100%, 60% 84%, 53% 97%,
+    46% 81%, 39% 98%, 32% 83%, 25% 99%,
+    18% 82%, 11% 98%, 4% 83%, 0% 96%
+  );
+  filter: url(#tape-filter);
+  z-index: 10;
+}
+
 @keyframes modal-pop {
   0%   { transform: scale(.3) rotate(-8deg); opacity: 0; }
   60%  { transform: scale(1.06) rotate(1deg); opacity: 1; }
@@ -662,6 +1055,9 @@ body::before {
   position: relative;
   overflow: hidden;
   background: #ddd;
+  box-shadow:
+    inset 1px 1px 4px rgba(44,26,14,.4),
+    inset -1px -1px 3px rgba(44,26,14,.2);
 }
 .polaroid-modal-photo img {
   position: absolute;
@@ -676,14 +1072,31 @@ body::before {
   text-align: center;
   margin-top: 8px;
   color: var(--ink);
+  transform: rotate(-1deg);
+  display: block;
+  filter: url(#crayon-displace);
 }
 
 /* ---------- Utility ---------- */
 .hidden { display: none !important; }
 
-/* wide screens — decorative side doodles */
+/* wide screens — slightly more visible background doodles */
 @media (min-width: 740px) {
-  .bg-doodles svg {
-    opacity: .22;
-  }
+  .doodle-tl-stars    { opacity: .22; }
+  .doodle-tr-squig    { opacity: .20; }
+  .doodle-bl-balloons { opacity: .21; }
+  .doodle-br-sun      { opacity: .19; }
+  .doodle-ml-dots     { opacity: .17; }
+  .doodle-mr-hat      { opacity: .18; }
+  .doodle-bc-stars    { opacity: .18; }
+  .doodle-tc-confetti { opacity: .22; }
+  .doodle-bunting     { opacity: .30; }
+}
+
+/* ---------- Mobile safety: no horizontal overflow at 360px ---------- */
+@media (max-width: 400px) {
+  .doodle-ml-dots,
+  .doodle-mr-hat  { display: none; }
+  .doodle-bl-balloons { left: -2px; }
+  .doodle-br-sun      { right: -2px; }
 }
